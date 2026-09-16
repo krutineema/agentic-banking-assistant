@@ -1,0 +1,42 @@
+[
+  {
+    "id": "acc-current-001",
+    "name": "Everyday Current Account",
+    "type": "current",
+    "balance": "4285.64",
+    "currency": "GBP",
+    "customer_id": "cust-001"
+  },
+  {
+    "id": "acc-savings-001",
+    "name": "Easy Access Savings",
+    "type": "savings",
+    "balance": "12450.00",
+    "currency": "GBP",
+    "customer_id": "cust-001"
+  },
+  {
+    "id": "acc-credit-001",
+    "name": "Rewards Credit Card",
+    "type": "credit",
+    "balance": "-643.22",
+    "currency": "GBP",
+    "customer_id": "cust-001"
+  },
+  {
+    "id": "acc-current-002",
+    "customer_id": "cust-002",
+    "name": "Everyday Current Account",
+    "type": "current",
+    "balance": "2175.30",
+    "currency": "GBP"
+  },
+  {
+    "id": "acc-savings-002",
+    "customer_id": "cust-002",
+    "name": "Rainy Day Savings",
+    "type": "savings",
+    "balance": "6800.00",
+    "currency": "GBP"
+  }
+]

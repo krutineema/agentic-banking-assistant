@@ -1,0 +1,18 @@
+[
+  {
+    "customer_id": "cust-001",
+    "username": "demo.alex",
+    "display_name": "Alex Morgan",
+    "password_salt": "7007581d2d0192ac2b19e1da353f5062",
+    "password_hash": "74a65b6fe18add5e0d5c2cc3e292fc3c6aa21db8d58c886e6011aac3328050a9",
+    "password_iterations": 120000
+  },
+  {
+    "customer_id": "cust-002",
+    "username": "demo.sam",
+    "display_name": "Sam Patel",
+    "password_salt": "c5c38a1ba05ac9305ab9bd2d67f616c0",
+    "password_hash": "2cc0f72cc189fd0387b57ee2aabb29b27e522670369f4aa6b8cb8dcc2b8ef4f6",
+    "password_iterations": 120000
+  }
+]
