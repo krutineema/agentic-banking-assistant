@@ -188,46 +188,34 @@ Later we will test whether the orchestration layer should remain one agent with 
 
 ## 4. Current implementation status
 
-### Current stage: **Stage 1A — Deterministic workflow baseline with customer session**
+### Current stage: **Stage 1B — SQLite + repository/data-access boundary**
 
-This is the first milestone intended to be preserved as a Git snapshot before Stage 1B begins. The historical write-up for this milestone lives at `docs/stages/stage1.md`. Recommended tag: `stage-1a`.
+Stage 1A is preserved by the `stage-1a` tag and documented in `docs/stages/stage1.md`. Stage 1B is the current milestone and should be tagged `stage-1b` when this implementation is pushed. Its historical write-up lives at `docs/stages/stage1b.md`.
 
-Implemented now:
+Implemented through Stage 1B:
 
-- FastAPI backend;
-- banking-style web UI;
-- login screen with two known synthetic users;
+- FastAPI backend and banking-style web UX;
+- login with two synthetic customers;
 - salted PBKDF2 password hashes;
 - opaque server-side session token in an HttpOnly cookie;
-- no signup workflow;
-- customer identity derived from the authenticated session;
-- customer-specific synthetic accounts and transactions;
-- backend-enforced account ownership and transaction isolation;
-- deterministic keyword intent router;
-- account-balance workflow;
-- recent-transactions workflow;
-- spending-summary workflow;
-- execution-trace panel;
-- automated tests including cross-customer isolation.
+- customer identity derived from authenticated session context;
+- deterministic intent routing and fixed assistant workflows;
+- SQLite relational persistence;
+- version-controlled schema and idempotent seed SQL;
+- `CustomerRepository` and `BankingRepository` persistence adapters;
+- customer ownership enforced inside repository SQL;
+- balances and amounts stored as integer pence and exposed as `Decimal` domain values;
+- execution trace panel;
+- automated tests for authentication, database bootstrap, repositories, customer isolation and workflows.
 
-Current demo credentials:
-
-```text
-demo.alex / Banking123!
-demo.sam  / Banking456!
-```
-
-Current persistence:
+Current persistence path:
 
 ```text
-customers.json
-accounts.json
-transactions.json
+AuthService    → CustomerRepository → SQLite
+BankingService → BankingRepository  → SQLite
 ```
 
-JSON is temporary bootstrap persistence. It is **not** the intended end state.
-
-Current high-level flow:
+Current assistant path:
 
 ```text
 Login
@@ -242,39 +230,37 @@ Fixed workflow
   ↓
 Customer-scoped BankingService
   ↓
-JSON data
+BankingRepository
+  ↓
+SQLite
   ↓
 Deterministic response
 ```
 
-### Stage 1A design decisions
+### Stage 1B design decisions
 
-1. Authentication exists from the beginning so later AI capabilities inherit the correct identity boundary.
-2. The browser never sends `customer_id` as the authority for data access.
-3. `BankingService` requires `customer_id` for every data operation.
-4. Transactions are scoped by the accounts owned by that customer.
-5. The assistant is not yet an agent; no LLM is involved.
-6. Transfers are deliberately unsupported.
+1. Persistence technology remains hidden beneath application services.
+2. Customer isolation is enforced in repository SQL rather than by loading all data and filtering in memory.
+3. The runtime SQLite database file is generated locally and ignored by Git; schema and seed SQL are version controlled.
+4. Monetary values use integer pence in the relational schema to avoid floating-point representation.
+5. Authentication records also move from JSON to the relational database.
+6. No LLM or agent behavior is introduced in this stage.
+7. The UI, API semantics and workflow behavior are intentionally almost unchanged from Stage 1A.
 
-### Stage 1A limitations
+### Stage 1B limitations
 
-The authentication implementation is educational rather than production-ready:
-
-- sessions are in memory and vanish when the application restarts;
-- no MFA;
-- no lockout/rate-limiting policy;
-- no password-reset flow;
-- no external identity provider;
-- local HTTP means the demo cookie is not marked `Secure`;
-- persistence is still JSON.
-
-These are acceptable for the current learning objective because the important architectural boundary — authenticated customer context before banking access — already exists.
+- SQLite is a local learning database, not a production banking datastore choice;
+- sessions remain in memory;
+- no database migration framework is introduced yet;
+- no MFA/external IdP/session revocation store;
+- no write banking operations;
+- no LLM/tool calling yet.
 
 ---
 
 # 5. Development phases
 
-## Stage 1B — Replace JSON with a local relational banking database
+## Stage 1B — Replace JSON with a local relational banking database ✅ complete
 
 ### Primary learning question
 
@@ -1171,11 +1157,11 @@ Likely future ADRs:
 The immediate sequence is:
 
 ```text
-Stage 1A  Customer-scoped deterministic baseline        ✅ complete
+Stage 1A  Customer-scoped deterministic baseline        ✅ tagged/history
     ↓
-Stage 1B  SQLite + repository/data-access boundary      ← next
+Stage 1B  SQLite + repository/data-access boundary      ✅ complete
     ↓
-Stage 2   LLM tool calling / first agent
+Stage 2   LLM tool calling / first agent                 ← next
     ↓
 Stage 3   Conversational state
     ↓
@@ -1211,7 +1197,7 @@ The following decisions should be treated as project invariants unless deliberat
 3. All banking data is customer specific.
 4. The authenticated session, not the model or UI request body, determines customer identity.
 5. Stage 1 deliberately begins deterministic so later agent behaviour has a baseline for comparison.
-6. JSON is temporary; SQLite is the next persistence layer.
+6. Runtime banking persistence is SQLite behind repositories; JSON was only the Stage 1A bootstrap mechanism.
 7. Known banking operations use controlled APIs/tools.
 8. Text-to-SQL is a separate read-only analytics capability behind validation, policy and customer-scope enforcement.
 9. Money movement never occurs through Text-to-SQL.

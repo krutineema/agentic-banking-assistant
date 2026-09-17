@@ -4,9 +4,10 @@ An evolving **AI application architecture learning project** that starts with a 
 
 The end goal is a fictional but enterprise-style personal banking assistant embedded in a banking web/mobile experience. The project will eventually cover LLM tool calling, conversational state, planning, human approval, guardrails, RAG, controlled Text-to-SQL, MCP, LangGraph, evaluation/observability, and a single-agent vs multi-agent architecture comparison.
 
-> **Current milestone:** Stage 1A — customer-scoped deterministic workflows  
-> **Recommended snapshot tag:** `stage-1a`  
-> **Next:** Stage 1B — SQLite + repository/data-access boundary
+> **Current milestone:** Stage 1B — SQLite + repository/data-access boundary  
+> **Recommended snapshot tag:** `stage-1b`  
+> **Previous snapshot:** `stage-1a`  
+> **Next:** Stage 2 — LLM tool calling / first agent
 
 ## Why the project starts without an agent
 
@@ -34,17 +35,18 @@ Synthetic banking data
 Deterministic response
 ```
 
-There is **no LLM in Stage 1A**.
+There is **still no LLM in Stage 1B**. The assistant remains deterministic; this milestone changes persistence only.
 
-## Current Stage 1A capabilities
+## Current Stage 1B capabilities
 
 The application currently includes:
 
 - a small banking-style web UX;
 - login with known synthetic customers;
 - server-side customer sessions referenced by an HttpOnly cookie;
-- customer-specific accounts and transactions;
-- backend-enforced customer isolation;
+- customer-specific accounts and transactions stored in SQLite;
+- backend-enforced customer isolation in repository SQL;
+- repository/data-access boundary separating services from persistence;
 - account-balance workflow;
 - recent-transactions workflow;
 - spending-summary workflow;
@@ -107,30 +109,35 @@ Planned comparison points include:
 
 These experiment folders should contain focused scenarios, comparison harnesses, results and findings — **not full copies of historical application code**. Historical code is preserved by Git tags.
 
-## Stage 1A structure
+## Stage 1B structure
 
 ```text
 agentic-banking-assistant/
 ├── app/
 │   ├── api/                 # FastAPI routes / controller boundary
 │   ├── core/                # deterministic intent router
-│   ├── data/                # temporary synthetic JSON persistence
+│   ├── data/                # generated local SQLite DB (ignored by Git)
+│   ├── database/            # connection/bootstrap + schema/seed SQL
 │   ├── models/              # Pydantic domain/API schemas
-│   ├── services/            # auth, session and banking service boundaries
+│   ├── repositories/        # SQLite persistence adapters
+│   ├── services/            # auth, session and banking application boundaries
 │   ├── static/              # banking-style UX
 │   ├── workflows/           # deterministic banking workflows
 │   └── main.py              # application bootstrap / composition root
 ├── docs/
 │   ├── adr/                 # architecture decision records
 │   └── stages/
-│       └── stage1.md        # completed Stage 1A learning record
+│       ├── stage1.md        # completed Stage 1A learning record
+│       └── stage1b.md       # completed Stage 1B persistence record
+├── scripts/                  # local tracing helper(s)
 ├── tests/
 ├── DEVELOPMENT_PHASES.md
 ├── README.md
+├── requirements-dev.txt     # optional tracing/development dependencies
 └── requirements.txt
 ```
 
-## Key Stage 1A boundaries
+## Key Stage 1B boundaries
 
 ### Customer identity is established before banking access
 
@@ -158,23 +165,18 @@ Traditional banking UX ─────┐
 Assistant workflows ────────┘
 ```
 
-### Persistence is intentionally temporary
+### Persistence now sits behind repositories
 
-Stage 1A reads synthetic data from JSON files only to keep the first learning problem focused on workflow design and customer isolation.
-
-Stage 1B replaces:
+Stage 1B replaces the temporary JSON runtime storage with:
 
 ```text
-BankingService → JSON
+BankingService → BankingRepository → SQLite
+AuthService    → CustomerRepository → SQLite
 ```
 
-with:
+Schema and seed SQL are version controlled; the generated `app/data/banking.db` file is ignored by Git. Monetary values are stored as integer pence and converted back to `Decimal` domain values by repositories.
 
-```text
-BankingService → Repository → SQLite
-```
-
-The layers above the service boundary should change very little.
+The router, workflows, public API behavior and UX remain intentionally almost unchanged.
 
 ## Run locally
 
@@ -199,7 +201,7 @@ Run tests:
 pytest -q
 ```
 
-## Try these Stage 1A requests
+## Try these Stage 1B requests
 
 After logging in:
 
@@ -221,19 +223,19 @@ is deliberately unsupported at this stage. Controlled write actions and explicit
 
 ## Suggested code-reading order
 
-If you are studying the implementation, follow this path:
+If you are studying the Stage 1B change, follow this path:
 
-1. `app/models/`
-2. `app/data/`
-3. `app/services/auth_service.py`
-4. `app/services/session_service.py`
-5. `app/services/banking_service.py`
-6. `app/core/router.py`
-7. `app/workflows/assistant_workflow.py`
-8. individual workflows such as `spending_summary.py`
-9. `app/api/routes.py`
-10. `app/static/app.js`
-11. `tests/`
+1. `app/database/schema.sql`
+2. `app/database/seed.sql`
+3. `app/database/connection.py`
+4. `app/repositories/customer_repository.py`
+5. `app/repositories/banking_repository.py`
+6. `app/services/auth_service.py`
+7. `app/services/banking_service.py`
+8. `app/dependencies.py`
+9. existing workflows — notice how little they changed
+10. `tests/test_repositories.py`
+11. `docs/stages/stage1b.md`
 
 The most important Stage 1 learning distinction is:
 
@@ -251,10 +253,11 @@ Later stages will deliberately challenge and evolve these boundaries.
 
 - [`DEVELOPMENT_PHASES.md`](DEVELOPMENT_PHASES.md) — forward-looking canonical architecture and development plan
 - [`docs/stages/stage1.md`](docs/stages/stage1.md) — historical Stage 1A implementation and learning record
+- [`docs/stages/stage1b.md`](docs/stages/stage1b.md) — Stage 1B SQLite/repository milestone
 - `docs/adr/` — individual architecture decisions
 
 ## Next milestone
 
-**Stage 1B: relational persistence.**
+**Stage 2: LLM tool calling / first agent.**
 
-The next change introduces SQLite and a repository/data-access layer while preserving the existing UX, authentication, deterministic workflow behaviour and customer-isolation rules.
+The application now has a stable customer-scoped relational data boundary. Stage 2 can expose selected read-only banking capabilities as tools and compare LLM tool selection with the deterministic Stage 1 router/workflows.

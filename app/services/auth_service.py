@@ -1,28 +1,18 @@
 import hashlib
 import hmac
-import json
-from pathlib import Path
 
-from app.models.auth import AuthenticatedCustomer, StoredCustomer
+from app.models.auth import AuthenticatedCustomer
+from app.repositories import CustomerRepository
 
 
 class AuthService:
-    """Validates demo credentials stored as salted password hashes.
+    """Validates demo credentials against customer records in SQLite."""
 
-    This is intentionally small and local for the learning project. It models the
-    authentication boundary without pretending to be a production identity system.
-    """
-
-    def __init__(self, data_dir: Path | None = None) -> None:
-        self.data_dir = data_dir or Path(__file__).resolve().parents[1] / "data"
-        self._customers = self._load_customers()
-
-    def _load_customers(self) -> list[StoredCustomer]:
-        payload = json.loads((self.data_dir / "customers.json").read_text())
-        return [StoredCustomer.model_validate(item) for item in payload]
+    def __init__(self, customers: CustomerRepository) -> None:
+        self.customers = customers
 
     def authenticate(self, username: str, password: str) -> AuthenticatedCustomer | None:
-        customer = next((c for c in self._customers if c.username == username), None)
+        customer = self.customers.find_by_username(username)
         if customer is None:
             return None
 

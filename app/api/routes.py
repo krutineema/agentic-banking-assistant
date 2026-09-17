@@ -1,26 +1,18 @@
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status
 
+from app.dependencies import assistant_workflow, auth_service, banking_service, session_service
 from app.models.assistant import AssistantRequest, AssistantResponse
 from app.models.auth import AuthenticatedCustomer, LoginRequest
-from app.services.auth_service import AuthService
-from app.services.banking_service import BankingService
-from app.services.session_service import SessionService
-from app.workflows.assistant_workflow import AssistantWorkflow
 
 
 router = APIRouter(prefix="/api")
-banking = BankingService()
-auth = AuthService()
-sessions = SessionService()
-assistant = AssistantWorkflow(banking=banking)
-
 SESSION_COOKIE = "northstar_session"
 
 
 def require_customer(
     northstar_session: str | None = Cookie(default=None),
 ) -> AuthenticatedCustomer:
-    customer = sessions.get(northstar_session)
+    customer = session_service.get(northstar_session)
     if customer is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -31,14 +23,14 @@ def require_customer(
 
 @router.post("/auth/login", response_model=AuthenticatedCustomer)
 def login(request: LoginRequest, response: Response) -> AuthenticatedCustomer:
-    customer = auth.authenticate(request.username, request.password)
+    customer = auth_service.authenticate(request.username, request.password)
     if customer is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid username or password",
         )
 
-    session_token = sessions.create(customer)
+    session_token = session_service.create(customer)
     response.set_cookie(
         key=SESSION_COOKIE,
         value=session_token,
@@ -60,7 +52,7 @@ def logout(
     response: Response,
     northstar_session: str | None = Cookie(default=None),
 ) -> None:
-    sessions.delete(northstar_session)
+    session_service.delete(northstar_session)
     response.delete_cookie(SESSION_COOKIE)
 
 
@@ -68,7 +60,7 @@ def logout(
 def list_accounts(customer: AuthenticatedCustomer = Depends(require_customer)):
     return [
         account.model_dump(mode="json")
-        for account in banking.get_accounts(customer.customer_id)
+        for account in banking_service.get_accounts(customer.customer_id)
     ]
 
 
@@ -77,7 +69,7 @@ def list_transactions(
     limit: int = 8,
     customer: AuthenticatedCustomer = Depends(require_customer),
 ):
-    transactions = banking.get_transactions(
+    transactions = banking_service.get_transactions(
         customer.customer_id,
         limit=min(max(limit, 1), 50),
     )
@@ -89,4 +81,4 @@ def assistant_message(
     request: AssistantRequest,
     customer: AuthenticatedCustomer = Depends(require_customer),
 ) -> AssistantResponse:
-    return assistant.handle(customer.customer_id, request.message)
+    return assistant_workflow.handle(customer.customer_id, request.message)

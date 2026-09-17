@@ -13,11 +13,11 @@ class AssistantWorkflow:
 
     def __init__(
         self,
-        banking: BankingService | None = None,
+        banking: BankingService,
         router: IntentRouter | None = None,
         today: date | None = None,
     ) -> None:
-        self.banking = banking or BankingService()
+        self.banking = banking
         self.router = router or IntentRouter()
         self.today = today
 

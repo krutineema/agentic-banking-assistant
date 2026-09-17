@@ -25,14 +25,8 @@
       <p class="subtle">Sign in to load only the accounts and transactions belonging to that synthetic customer.</p>
 
       <form id="login-form" class="login-form">
-        <label>
-          Username
-          <input id="username" name="username" autocomplete="username" required />
-        </label>
-        <label>
-          Password
-          <input id="password" name="password" type="password" autocomplete="current-password" required />
-        </label>
+        <label>Username<input id="username" name="username" autocomplete="username" required /></label>
+        <label>Password<input id="password" name="password" type="password" autocomplete="current-password" required /></label>
         <button type="submit">Log in</button>
         <div id="login-error" class="login-error" role="alert"></div>
       </form>
@@ -50,16 +44,9 @@
       <p class="eyebrow">OVERVIEW</p>
       <h1 id="greeting">Good morning</h1>
       <p class="subtle">Synthetic, customer-scoped accounts for the learning project.</p>
-
       <div id="accounts" class="accounts-grid"></div>
-
       <section class="transactions-card">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">ACTIVITY</p>
-            <h2>Recent transactions</h2>
-          </div>
-        </div>
+        <div class="section-heading"><div><p class="eyebrow">ACTIVITY</p><h2>Recent transactions</h2></div></div>
         <div id="transactions"></div>
       </section>
     </section>
@@ -67,29 +54,18 @@
     <aside class="assistant-card">
       <div class="assistant-heading">
         <div class="spark">✦</div>
-        <div>
-          <h2>Banking Assistant</h2>
-          <p>Stage 1 · deterministic workflows</p>
-        </div>
+        <div><h2>Banking Assistant</h2><p>Stage 1B · deterministic workflows + SQLite</p></div>
       </div>
-
       <div class="stage-note">
-        The authenticated customer session is applied before any banking data is read. A rule-based router then selects a fixed workflow.
+        The customer session scopes every banking query. Workflows still behave deterministically; persistence now flows through repositories into SQLite.
       </div>
-
       <div id="chat" class="chat" aria-live="polite">
-        <div class="message assistant">
-          <div class="bubble">
-            Try: “What are my balances?”, “Show recent transactions”, or “How much did I spend on restaurants in August?”
-          </div>
-        </div>
+        <div class="message assistant"><div class="bubble">Try: “What are my balances?”, “Show recent transactions”, or “How much did I spend on restaurants in August?”</div></div>
       </div>
-
       <form id="chat-form" class="composer">
         <input id="message" autocomplete="off" placeholder="Ask about your money…" />
         <button type="submit">Send</button>
       </form>
-
       <details class="trace-panel" open>
         <summary>Execution trace</summary>
         <div id="trace" class="trace-empty">Run a request to see the deterministic steps.</div>

@@ -65,7 +65,7 @@ class SpendingSummaryWorkflow:
                     detail=f"Resolved period to {period_label} and category to {category or 'all spending'}.",
                 ),
                 ExecutionStep(step="data", detail="Retrieved the customer's matching debit transactions."),
-                ExecutionStep(step="calculate", detail="Summed debit amounts deterministically."),
+                ExecutionStep(step="calculate", detail="Aggregated debit amounts through the repository/database path."),
                 ExecutionStep(step="format", detail="Rendered a customer-readable summary."),
             ],
         )
